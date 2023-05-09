@@ -2,13 +2,36 @@ import "./DataTable.scss";
 import { DataGrid } from "@mui/x-data-grid";
 import { userColumn, userRows } from "../../datatablesource";
 import { Link } from "react-router-dom";
-import { useState } from "react";
-
+import { useEffect, useState } from "react";
+import {db} from "../../firebase"
+import { getDocs, collection, deleteDoc, doc } from "firebase/firestore";
 const DataTable = () => {
-  const [data, setData] =useState(userRows)
+  const [data, setData] =useState([]);
 
-  const handleDelete =(id) => {
-    setData(data.filter(item=> item.id !== id))
+  useEffect(() => {
+    const fetchData = async () =>{
+      let list = []
+      try{
+        const querySnapshot = await getDocs(collection (db, "users"));
+        querySnapshot.forEach((doc) => {
+          list.push({id: doc.id, ...doc.data()})
+        });
+        setData(list)
+      }catch(err){
+        console.log(err)
+      }
+    };
+    fetchData()
+  },[])
+  console.log(data)
+  const handleDelete = async(id) => {
+    try{
+      await deleteDoc(doc(db, "users", id))
+      setData(data.filter(item=> item.id !== id))
+    }catch(error){
+      console.log(error)
+    }
+    
   }
     const actionColumn = [
         {field: "action", headerName:"Action", width:200, renderCell: (params)=>{
